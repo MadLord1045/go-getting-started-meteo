@@ -1,0 +1,39 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type City {
+  id: ID!
+  text: String!
+  meteo: [Meteo!]
+}
+
+type Meteo {
+  id: ID!
+  day: String!
+  meteoType: MeteoType
+}
+
+
+type MeteoType {
+  id: ID!
+  name: String!
+}
+
+
+
+type Query {
+  cities: [City!]!
+  meteos: [Meteo!]!
+  meteoTypes: [MeteoType!]!
+}
+
+input NewMeteo {
+  day: String!
+  cityId: ID!
+  meteoType: ID!
+}
+
+type Mutation {
+  createMeteo(input: NewMeteo!): Meteo!
+}
