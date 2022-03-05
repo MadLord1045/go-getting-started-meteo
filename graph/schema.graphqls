@@ -24,7 +24,6 @@ type MeteoType {
 
 type Query {
   cities: [City!]!
-  meteos: [Meteo!]!
   meteoTypes: [MeteoType!]!
 }
 

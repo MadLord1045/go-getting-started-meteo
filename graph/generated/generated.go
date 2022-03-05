@@ -67,7 +67,6 @@ type ComplexityRoot struct {
 	Query struct {
 		Cities     func(childComplexity int) int
 		MeteoTypes func(childComplexity int) int
-		Meteos     func(childComplexity int) int
 	}
 }
 
@@ -76,7 +75,6 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Cities(ctx context.Context) ([]*model.City, error)
-	Meteos(ctx context.Context) ([]*model.Meteo, error)
 	MeteoTypes(ctx context.Context) ([]*model.MeteoType, error)
 }
 
@@ -177,13 +175,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MeteoTypes(childComplexity), true
 
-	case "Query.meteos":
-		if e.complexity.Query.Meteos == nil {
-			break
-		}
-
-		return e.complexity.Query.Meteos(childComplexity), true
-
 	}
 	return 0, false
 }
@@ -274,7 +265,6 @@ type MeteoType {
 
 type Query {
   cities: [City!]!
-  meteos: [Meteo!]!
   meteoTypes: [MeteoType!]!
 }
 
@@ -712,41 +702,6 @@ func (ec *executionContext) _Query_cities(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.City)
 	fc.Result = res
 	return ec.marshalNCity2ᚕᚖbocasayᚑgqlᚋgraphᚋmodelᚐCityᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_meteos(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Meteos(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Meteo)
-	fc.Result = res
-	return ec.marshalNMeteo2ᚕᚖbocasayᚑgqlᚋgraphᚋmodelᚐMeteoᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_meteoTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2307,29 +2262,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "meteos":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_meteos(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "meteoTypes":
 			field := field
 
@@ -2887,50 +2819,6 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 
 func (ec *executionContext) marshalNMeteo2bocasayᚑgqlᚋgraphᚋmodelᚐMeteo(ctx context.Context, sel ast.SelectionSet, v model.Meteo) graphql.Marshaler {
 	return ec._Meteo(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMeteo2ᚕᚖbocasayᚑgqlᚋgraphᚋmodelᚐMeteoᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Meteo) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMeteo2ᚖbocasayᚑgqlᚋgraphᚋmodelᚐMeteo(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalNMeteo2ᚖbocasayᚑgqlᚋgraphᚋmodelᚐMeteo(ctx context.Context, sel ast.SelectionSet, v *model.Meteo) graphql.Marshaler {

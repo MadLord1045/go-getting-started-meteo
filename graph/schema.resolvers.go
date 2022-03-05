@@ -7,19 +7,34 @@ import (
 	"bocasay-gql/graph/generated"
 	"bocasay-gql/graph/model"
 	"context"
-	"fmt"
+	"errors"
+	"strconv"
 )
 
 func (r *mutationResolver) CreateMeteo(ctx context.Context, input model.NewMeteo) (*model.Meteo, error) {
-	panic(fmt.Errorf("not implemented"))
+	id := input.CityID
+	var meteoType int
+	for index, item := range MeteoTypes {
+		if item.ID == input.MeteoType {
+			meteoType = index
+		}
+	}
+	for _, item := range Cities {
+		if item.ID == id {
+			result := &model.Meteo{
+				ID:        strconv.FormatInt(int64(len(item.Meteo)+2), 10),
+				Day:       input.Day,
+				MeteoType: MeteoTypes[meteoType],
+			}
+			item.Meteo = append(item.Meteo, result)
+			return result, nil
+		}
+	}
+	return nil, errors.New("Mismatch ids")
 }
 
 func (r *queryResolver) Cities(ctx context.Context) ([]*model.City, error) {
 	return Cities, nil
-}
-
-func (r *queryResolver) Meteos(ctx context.Context) ([]*model.Meteo, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) MeteoTypes(ctx context.Context) ([]*model.MeteoType, error) {
@@ -36,14 +51,18 @@ type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 
 var (
-	Cities = []*model.City{
-		{"1", "Antananaivo", []*model.Meteo{}},
-		{"2", "Mahajanga", []*model.Meteo{}},
-		{"3", "Antsiranana", []*model.Meteo{}},
-	}
 	MeteoTypes = []*model.MeteoType{
 		{"1", "Pluvieux"},
 		{"2", "Ensoleillé"},
 		{"3", "Couvert"},
+	}
+	Cities = []*model.City{
+		{"1", "Antananaivo", []*model.Meteo{}},
+		{"2", "Mahajanga", []*model.Meteo{}},
+		{"3", "Antsiranana", []*model.Meteo{
+			{"1", "Lundi", MeteoTypes[0]},
+			{"2", "Mardi", MeteoTypes[1]},
+			{"3", "Mercredi", MeteoTypes[2]},
+		}},
 	}
 )
